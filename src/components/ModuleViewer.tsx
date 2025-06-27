@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -105,48 +106,28 @@ const ModuleViewer: React.FC<ModuleViewerProps> = ({
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6 bg-gray-100 p-1">
-          <TabsTrigger 
-            value="conteudo"
-            className="text-gray-700 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
-          >
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="conteudo">
             Conteúdo
             {module.progress.videoWatched && <CheckCircle className="h-3 w-3 ml-1 text-green-500" />}
           </TabsTrigger>
-          <TabsTrigger 
-            value="materiais"
-            className="text-gray-700 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
-          >
+          <TabsTrigger value="materiais">
             Materiais
             {module.progress.materialsDownloaded > 0 && <CheckCircle className="h-3 w-3 ml-1 text-green-500" />}
           </TabsTrigger>
-          <TabsTrigger 
-            value="atividades"
-            className="text-gray-700 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
-          >
+          <TabsTrigger value="atividades">
             Atividades
             {module.progress.activitiesCompleted > 0 && <CheckCircle className="h-3 w-3 ml-1 text-green-500" />}
           </TabsTrigger>
-          <TabsTrigger 
-            value="quiz"
-            className="text-gray-700 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
-          >
+          <TabsTrigger value="quiz">
             Quiz
             {module.progress.quizCompleted && <CheckCircle className="h-3 w-3 ml-1 text-green-500" />}
           </TabsTrigger>
-          <TabsTrigger 
-            value="forum"
-            className="text-gray-700 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
-          >
+          <TabsTrigger value="forum">
             Fórum
             {module.progress.forumParticipated && <CheckCircle className="h-3 w-3 ml-1 text-green-500" />}
           </TabsTrigger>
-          <TabsTrigger 
-            value="certificado"
-            className="text-gray-700 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
-          >
-            Certificado
-          </TabsTrigger>
+          <TabsTrigger value="certificado">Certificado</TabsTrigger>
         </TabsList>
 
         <TabsContent value="conteudo" className="space-y-6">
