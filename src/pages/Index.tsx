@@ -1,20 +1,21 @@
-
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import Dashboard from '../components/Dashboard';
 import ModuleList from '../components/ModuleList';
 import ModuleViewer from '../components/ModuleViewer';
 import { courseModules } from '../data/courseData';
-import { Module } from '../types/course';
+import { Module, ModuleProgress } from '../types/course';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
+  const [modules, setModules] = useState(courseModules);
   const [userProgress, setUserProgress] = useState({
     completedModules: 0,
     totalModules: 8,
     totalProgress: 12,
-    certificateEarned: false
+    certificateEarned: false,
+    moduleProgress: {} as { [moduleId: number]: ModuleProgress }
   });
 
   const handleModuleSelect = (module: Module) => {
@@ -28,15 +29,83 @@ const Index = () => {
   };
 
   const handleCompleteModule = (moduleId: number) => {
-    // Aqui você implementaria a lógica para marcar o módulo como concluído
-    console.log('Módulo concluído:', moduleId);
+    setModules(prevModules => 
+      prevModules.map(module => {
+        if (module.id === moduleId) {
+          return { ...module, isCompleted: true };
+        }
+        // Desbloquear próximo módulo
+        if (module.id === moduleId + 1) {
+          return { ...module, isLocked: false };
+        }
+        return module;
+      })
+    );
     
-    // Simular atualização do progresso
     setUserProgress(prev => ({
       ...prev,
       completedModules: prev.completedModules + 1,
       totalProgress: Math.min(prev.totalProgress + 12.5, 100)
     }));
+  };
+
+  const handleUpdateProgress = (moduleId: number, progressType: string, value?: any) => {
+    setModules(prevModules => 
+      prevModules.map(module => {
+        if (module.id === moduleId) {
+          const updatedProgress = { ...module.progress };
+          
+          switch (progressType) {
+            case 'videoWatched':
+              updatedProgress.videoWatched = true;
+              break;
+            case 'materialDownload':
+              updatedProgress.materialsDownloaded += 1;
+              break;
+            case 'activityComplete':
+              updatedProgress.activitiesCompleted += 1;
+              // Marcar atividade como completa
+              const updatedActivities = module.activities.map(activity => 
+                activity.id === value ? { ...activity, isCompleted: true } : activity
+              );
+              return { 
+                ...module, 
+                progress: updatedProgress,
+                activities: updatedActivities 
+              };
+            case 'quizComplete':
+              updatedProgress.quizCompleted = true;
+              const updatedQuiz = module.quiz ? { ...module.quiz, isCompleted: true, score: value } : module.quiz;
+              return { 
+                ...module, 
+                progress: updatedProgress,
+                quiz: updatedQuiz 
+              };
+            case 'forumParticipation':
+              updatedProgress.forumParticipated = true;
+              const updatedForum = module.forum.map(topic => 
+                topic.id === value ? { ...topic, isParticipated: true } : topic
+              );
+              return { 
+                ...module, 
+                progress: updatedProgress,
+                forum: updatedForum 
+              };
+          }
+          
+          return { ...module, progress: updatedProgress };
+        }
+        return module;
+      })
+    );
+
+    // Se o módulo selecionado foi atualizado, atualizar também o estado selectedModule
+    if (selectedModule && selectedModule.id === moduleId) {
+      const updatedModule = modules.find(m => m.id === moduleId);
+      if (updatedModule) {
+        setSelectedModule(updatedModule);
+      }
+    }
   };
 
   const renderContent = () => {
@@ -47,7 +116,7 @@ const Index = () => {
       case 'modules':
         return (
           <ModuleList 
-            modules={courseModules} 
+            modules={modules} 
             onModuleSelect={handleModuleSelect}
           />
         );
@@ -58,6 +127,7 @@ const Index = () => {
             module={selectedModule}
             onBack={handleBackToModules}
             onCompleteModule={handleCompleteModule}
+            onUpdateProgress={handleUpdateProgress}
           />
         ) : null;
       

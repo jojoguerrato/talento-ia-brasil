@@ -4,16 +4,25 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Play, Download, ExternalLink, MessageSquare, FileText, Link } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { ArrowLeft, Play, Download, ExternalLink, MessageSquare, FileText, Link, CheckCircle } from 'lucide-react';
 import { Module } from '../types/course';
+import ActivityManager from './ActivityManager';
+import QuizManager from './QuizManager';
 
 interface ModuleViewerProps {
   module: Module;
   onBack: () => void;
   onCompleteModule: (moduleId: number) => void;
+  onUpdateProgress: (moduleId: number, progressType: string, value?: any) => void;
 }
 
-const ModuleViewer: React.FC<ModuleViewerProps> = ({ module, onBack, onCompleteModule }) => {
+const ModuleViewer: React.FC<ModuleViewerProps> = ({ 
+  module, 
+  onBack, 
+  onCompleteModule,
+  onUpdateProgress 
+}) => {
   const [activeTab, setActiveTab] = useState('conteudo');
 
   const getMaterialIcon = (type: string) => {
@@ -28,6 +37,40 @@ const ModuleViewer: React.FC<ModuleViewerProps> = ({ module, onBack, onCompleteM
       default:
         return <Download className="h-4 w-4" />;
     }
+  };
+
+  const handleVideoComplete = () => {
+    onUpdateProgress(module.id, 'videoWatched', true);
+  };
+
+  const handleMaterialDownload = (materialId: number) => {
+    onUpdateProgress(module.id, 'materialDownload', materialId);
+  };
+
+  const handleActivityComplete = (activityId: number) => {
+    onUpdateProgress(module.id, 'activityComplete', activityId);
+  };
+
+  const handleQuizComplete = (score: number) => {
+    onUpdateProgress(module.id, 'quizComplete', score);
+  };
+
+  const handleForumParticipation = (topicId: number) => {
+    onUpdateProgress(module.id, 'forumParticipation', topicId);
+  };
+
+  const calculateModuleProgress = () => {
+    const { progress } = module;
+    let totalTasks = 5; // video, materiais, quiz, fórum, atividades
+    let completedTasks = 0;
+
+    if (progress.videoWatched) completedTasks++;
+    if (progress.materialsDownloaded > 0) completedTasks++;
+    if (progress.quizCompleted) completedTasks++;
+    if (progress.forumParticipated) completedTasks++;
+    if (progress.activitiesCompleted > 0) completedTasks++;
+
+    return Math.round((completedTasks / totalTasks) * 100);
   };
 
   return (
@@ -46,26 +89,63 @@ const ModuleViewer: React.FC<ModuleViewerProps> = ({ module, onBack, onCompleteM
         </Badge>
       </div>
 
+      {/* Barra de Progresso do Módulo */}
+      <Card className="p-4 bg-gradient-to-r from-blue-50 to-purple-50">
+        <div className="flex justify-between items-center mb-2">
+          <span className="font-medium text-gray-900">Progresso do Módulo</span>
+          <span className="text-sm font-semibold text-blue-600">{calculateModuleProgress()}%</span>
+        </div>
+        <Progress value={calculateModuleProgress()} className="h-3" />
+        <div className="flex justify-between text-xs text-gray-600 mt-2">
+          <span>Vídeo: {module.progress.videoWatched ? '✓' : '○'}</span>
+          <span>Materiais: {module.progress.materialsDownloaded}/{module.materials.length}</span>
+          <span>Quiz: {module.progress.quizCompleted ? '✓' : '○'}</span>
+          <span>Fórum: {module.progress.forumParticipated ? '✓' : '○'}</span>
+          <span>Atividades: {module.progress.activitiesCompleted}/{module.activities.length}</span>
+        </div>
+      </Card>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="conteudo">Conteúdo</TabsTrigger>
-          <TabsTrigger value="materiais">Materiais</TabsTrigger>
-          <TabsTrigger value="quiz">Quiz</TabsTrigger>
-          <TabsTrigger value="forum">Fórum</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="conteudo">
+            Conteúdo
+            {module.progress.videoWatched && <CheckCircle className="h-3 w-3 ml-1 text-green-500" />}
+          </TabsTrigger>
+          <TabsTrigger value="materiais">
+            Materiais
+            {module.progress.materialsDownloaded > 0 && <CheckCircle className="h-3 w-3 ml-1 text-green-500" />}
+          </TabsTrigger>
+          <TabsTrigger value="atividades">
+            Atividades
+            {module.progress.activitiesCompleted > 0 && <CheckCircle className="h-3 w-3 ml-1 text-green-500" />}
+          </TabsTrigger>
+          <TabsTrigger value="quiz">
+            Quiz
+            {module.progress.quizCompleted && <CheckCircle className="h-3 w-3 ml-1 text-green-500" />}
+          </TabsTrigger>
+          <TabsTrigger value="forum">
+            Fórum
+            {module.progress.forumParticipated && <CheckCircle className="h-3 w-3 ml-1 text-green-500" />}
+          </TabsTrigger>
           <TabsTrigger value="certificado">Certificado</TabsTrigger>
         </TabsList>
 
         <TabsContent value="conteudo" className="space-y-6">
           <Card className="p-6">
-            <div className="bg-black rounded-lg aspect-video flex items-center justify-center mb-6">
+            <div className="bg-black rounded-lg aspect-video flex items-center justify-center mb-6 relative">
               <div className="text-white text-center">
                 <Play className="h-16 w-16 mx-auto mb-4" />
-                <p className="text-lg">Player de Vídeo</p>
-                <p className="text-sm text-gray-300">Aula: {module.title}</p>
+                <p className="text-lg">Aula: {module.title}</p>
+                <p className="text-sm text-gray-300">Duração: {module.duration}</p>
               </div>
+              {module.progress.videoWatched && (
+                <div className="absolute top-4 right-4">
+                  <CheckCircle className="h-8 w-8 text-green-500" />
+                </div>
+              )}
             </div>
             
-            <div className="prose max-w-none">
+            <div className="prose max-w-none mb-6">
               <h3>Conteúdo Programático</h3>
               <p>
                 Neste módulo, você irá aprender sobre os fundamentos da inteligência artificial 
@@ -82,15 +162,16 @@ const ModuleViewer: React.FC<ModuleViewerProps> = ({ module, onBack, onCompleteM
               </ul>
             </div>
 
-            <div className="mt-6 flex justify-between items-center">
+            <div className="flex justify-between items-center">
               <div className="text-sm text-gray-500">
-                Progresso: {module.isCompleted ? '100%' : '0%'} concluído
+                Status: {module.progress.videoWatched ? 'Assistido' : 'Não assistido'}
               </div>
               <Button 
-                onClick={() => onCompleteModule(module.id)}
-                disabled={module.isCompleted}
+                onClick={handleVideoComplete}
+                disabled={module.progress.videoWatched}
+                variant={module.progress.videoWatched ? "outline" : "default"}
               >
-                {module.isCompleted ? 'Módulo Concluído' : 'Marcar como Concluído'}
+                {module.progress.videoWatched ? 'Vídeo Assistido' : 'Marcar como Assistido'}
               </Button>
             </div>
           </Card>
@@ -109,7 +190,11 @@ const ModuleViewer: React.FC<ModuleViewerProps> = ({ module, onBack, onCompleteM
                     <p className="text-sm text-gray-600">{material.description}</p>
                   )}
                 </div>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleMaterialDownload(material.id)}
+                >
                   <Download className="h-4 w-4 mr-2" />
                   {material.type === 'link' ? 'Acessar' : 'Download'}
                 </Button>
@@ -125,23 +210,24 @@ const ModuleViewer: React.FC<ModuleViewerProps> = ({ module, onBack, onCompleteM
           )}
         </TabsContent>
 
+        <TabsContent value="atividades" className="space-y-4">
+          <ActivityManager 
+            activities={module.activities}
+            onCompleteActivity={handleActivityComplete}
+          />
+        </TabsContent>
+
         <TabsContent value="quiz" className="space-y-4">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Quiz do Módulo</h3>
-            {module.quiz ? (
-              <div className="space-y-4">
-                <p className="text-gray-600">
-                  Complete o quiz para testar seus conhecimentos sobre este módulo.
-                  Pontuação mínima para aprovação: {module.quiz.passingScore}%
-                </p>
-                <Button className="w-full">
-                  Iniciar Quiz ({module.quiz.questions.length} perguntas)
-                </Button>
-              </div>
-            ) : (
+          {module.quiz ? (
+            <QuizManager 
+              quiz={module.quiz}
+              onCompleteQuiz={handleQuizComplete}
+            />
+          ) : (
+            <Card className="p-8 text-center">
               <p className="text-gray-500">Quiz não disponível para este módulo.</p>
-            )}
-          </Card>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="forum" className="space-y-4">
@@ -159,8 +245,12 @@ const ModuleViewer: React.FC<ModuleViewerProps> = ({ module, onBack, onCompleteM
                     <span>{topic.lastActivity}</span>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">
-                  Participar
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleForumParticipation(topic.id)}
+                >
+                  {topic.isParticipated ? 'Participando' : 'Participar'}
                 </Button>
               </div>
             </Card>
@@ -179,23 +269,28 @@ const ModuleViewer: React.FC<ModuleViewerProps> = ({ module, onBack, onCompleteM
           <Card className="p-8 text-center">
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-lg mb-6">
               <h3 className="text-xl font-bold mb-2">Certificado de Conclusão</h3>
-              <p>Inteligência Artificial para RH</p>
+              <p>Módulo: {module.title}</p>
             </div>
             
-            {module.isCompleted ? (
+            {calculateModuleProgress() === 100 ? (
               <div className="space-y-4">
                 <p className="text-green-600 font-medium">
                   ✓ Módulo concluído com sucesso!
                 </p>
                 <Button className="w-full">
                   <Download className="h-4 w-4 mr-2" />
-                  Baixar Certificado
+                  Baixar Certificado do Módulo
                 </Button>
               </div>
             ) : (
-              <p className="text-gray-500">
-                Complete todos os módulos e atividades para receber seu certificado.
-              </p>
+              <div className="space-y-4">
+                <p className="text-gray-500">
+                  Complete todas as atividades do módulo para gerar seu certificado.
+                </p>
+                <div className="text-sm text-gray-400">
+                  Progresso atual: {calculateModuleProgress()}%
+                </div>
+              </div>
             )}
           </Card>
         </TabsContent>

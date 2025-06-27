@@ -10,6 +10,8 @@ export interface Module {
   materials: Material[];
   quiz?: Quiz;
   forum: ForumTopic[];
+  activities: Activity[];
+  progress: ModuleProgress;
 }
 
 export interface Material {
@@ -24,6 +26,8 @@ export interface Quiz {
   id: number;
   questions: Question[];
   passingScore: number;
+  isCompleted: boolean;
+  score?: number;
 }
 
 export interface Question {
@@ -41,6 +45,25 @@ export interface ForumTopic {
   date: string;
   replies: number;
   lastActivity: string;
+  isParticipated: boolean;
+}
+
+export interface Activity {
+  id: number;
+  title: string;
+  type: 'hands-on' | 'case-study' | 'reflection';
+  description: string;
+  instructions: string[];
+  isCompleted: boolean;
+}
+
+export interface ModuleProgress {
+  videoWatched: boolean;
+  materialsDownloaded: number;
+  quizCompleted: boolean;
+  forumParticipated: boolean;
+  activitiesCompleted: number;
+  certificateGenerated: boolean;
 }
 
 export interface UserProgress {
@@ -49,4 +72,5 @@ export interface UserProgress {
   quizScores: { [moduleId: number]: number };
   certificateEarned: boolean;
   totalProgress: number;
+  moduleProgress: { [moduleId: number]: ModuleProgress };
 }
