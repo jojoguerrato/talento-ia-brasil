@@ -3,6 +3,9 @@ import Sidebar from '../components/Sidebar';
 import Dashboard from '../components/Dashboard';
 import ModuleList from '../components/ModuleList';
 import ModuleViewer from '../components/ModuleViewer';
+import WebinarsPage from '../components/WebinarsPage';
+import SchedulePage from '../components/SchedulePage';
+import CertificatesPage from '../components/CertificatesPage';
 import { courseModules } from '../data/courseData';
 import { Module, ModuleProgress } from '../types/course';
 
@@ -11,9 +14,9 @@ const Index = () => {
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [modules, setModules] = useState(courseModules);
   const [userProgress, setUserProgress] = useState({
-    completedModules: 0,
+    completedModules: 1,
     totalModules: 8,
-    totalProgress: 12,
+    totalProgress: 12.5,
     certificateEarned: false,
     moduleProgress: {} as { [moduleId: number]: ModuleProgress }
   });
@@ -132,12 +135,7 @@ const Index = () => {
         ) : null;
       
       case 'webinars':
-        return (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold mb-4">Webinars ao Vivo</h2>
-            <p className="text-gray-600">Seção em desenvolvimento</p>
-          </div>
-        );
+        return <WebinarsPage />;
       
       case 'forum':
         return (
@@ -156,20 +154,10 @@ const Index = () => {
         );
       
       case 'schedule':
-        return (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold mb-4">Cronograma</h2>
-            <p className="text-gray-600">Seção em desenvolvimento</p>
-          </div>
-        );
+        return <SchedulePage />;
       
       case 'certificates':
-        return (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold mb-4">Certificados</h2>
-            <p className="text-gray-600">Seção em desenvolvimento</p>
-          </div>
-        );
+        return <CertificatesPage />;
       
       default:
         return <Dashboard userProgress={userProgress} />;
